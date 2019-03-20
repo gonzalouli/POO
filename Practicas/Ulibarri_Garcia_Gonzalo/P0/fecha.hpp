@@ -2,36 +2,34 @@
 #ifndef FECHA_HPP_
 #define FECHA_HPP_
 
-std::time_t tiempo_calendario = std::time(nullptr);
-std::tm* tiempo_descompuesto = std::localtime(&tiempo_calendario);
-
-
 class fecha{
-
-
 
 public:
 
-    friend fecha() : dia_{tiempo_descompuesto->tm_mday},mes_{tiempo_descompuesto->tm_mon + 1}
-    ,anno_{tiempo_descompuesto->tm_year + 1900} {}; ///ctor predeterminado
+    explicit fecha(int dia=0, int mes = 0, int anno = 0 ): dia_(dia),mes_(mes),anno_(anno);
+    fecha(const char *fecha);
+    
+    const dia() {return dia_;}
+    const mes() {return mes_;}
+    const anno() {return anno_}; 
+    static int annomin =  1808;
+    static int annomax =  2048;
 
-    friend fecha(int dia,int mes,int anno) : dia_{dia},mes_{mes},anno_{anno} {}
-    friend fecha(int dia, int mes) : dia_{dia},mes_{mes},anno_{tiempo_descompuesto->tm_year + 1900} {};
-    friend fecha(int dia) : dia_{dia},mes_{tiempo_descompuesto->tm_mon + 1},anno_{tiempo_descompuesto->tm_year + 1900} {}
-    friend fecha (const fecha& f);
-    friend fecha(char *fech); 
-
-
-
-
+    class Invalida{
+    public:
+        Invalida (const char * motivo);;
+        const por_que(const char* invalida) {cout << "FALLO"; return motivo;};
+    private: 
+        const char * motivo;
+    }
 
 private:
     int dia_;
     int mes_;
     int anno_;
-
-
-
 }
+
+
+
 
 #endif
