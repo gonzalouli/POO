@@ -1,0 +1,25 @@
+cambios
+
+operator const char * (----
+const char* {cadena, c_str}
+
+
+
+Los flujos no se pueden copiar
+ostream & operator <<(ostream & s,//(ej.)// const Fecha &f){
+	s<< f.cadena();	
+	return s;
+}
+	
+	No se pueden poner internos de la clase
+
+	SI es preciso, declararlos Friend
+istream &operator >>(istream &e ,Fecha &f){
+	
+	
+
+		//dia / mes / anno 		ctor por defecto fecha// 
+	
+	return e
+}
+

@@ -1,0 +1,41 @@
+# MAKEFILE 
+
+CXX = clang++
+CPPFLAGS =-DP0 -I../Test-auto -I
+CXX FLAGS = -std=c++11  -Wall   -pedantic
+VPATH = ../Test-auto:.
+
+all: test-P0-auto   test-P0-consola
+
+test-P0-auto: test-caso0-fecha-auto.o test-caso0-cadena-auto.o \
+                test-auto.o cadena.o fecha.o
+
+    $(CXX) -o $@ $(LDFLAGS) $^
+    #CXX--opcion--@ significa el objetivo de la regla (testp0auto)--LDFLAGS opciones del enlazador--- variable ^ significa todas las dependencias de la regla
+
+
+    test-caso0-fecha-auto.o test-caso0-cadena-auto.o test-auto.o: \
+        test-caso0-fecha-auto.cpp test-caso0-cadena-auto.cpp \
+        test-auto.cpp test-auto.hpp fecha.hpp cadena.hpp
+
+
+
+test-P0-consola: test-p0-copnsola.o fecha.o cadena.o
+
+	$(CXX) -o $@ $(LDFLAGS) $^
+
+test-p0-copnsola.o: test-p0-consola.cpp fecha.hpp cadena.hpp
+#el .cpp es opcional
+
+
+#reglas de fecha.hpp y de cadena.hpp
+	
+	fecha.o: fecha.cpp fecha.hpp
+	
+	cadena.o: fecha.cpp cadena.hpp
+
+
+clean:
+	$(RM) *.o
+#mucho cuidado con el *.o , si ponemos * .o borramos TODO
+
