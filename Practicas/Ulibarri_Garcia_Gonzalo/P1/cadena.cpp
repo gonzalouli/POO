@@ -96,6 +96,7 @@ std::basic_ostream<char>& operator <<(std::basic_ostream<char>& out, const Caden
 
 using namespace std;
 int main(){
+
 	cout << "Hola que tal";
 	cout << "Adios";
 return 0;

@@ -6,6 +6,9 @@
 #include <chrono>
 #include "fecha.hpp"
 
+#ifndef FECHA_CPP_
+#define FECHA_CPP_
+
 using namespace std;
 ///time_point<system_clock> hoy = system_clock::now();
 ///std::time_t tc = system_clock::to_time_t(hoy);
@@ -67,15 +70,65 @@ Fecha::operator const char*() const{
   static char fechaCad[36];
 
   tm t = {0, 0, 0, dia_, mes_ - 1, anno_ - 1900, 0, 0, 0};
-  static const char* semana[] = {"domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"};
-  static const char* mes[] = {"", "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "septiembre", "octubre", "noviembre", "diciembre"};
   mktime(&t);
   int diasem = t.tm_wday;
-  sprintf(fechaCad, "%s %d de %s del %d", semana[diasem], dia_, mes[mes_], anno_);
+  sprintf(fechaCad, "%s %d de %s del %d", Fecha::diasSemana[diasem], dia_, meses[mes_], anno_);
 
   return fechaCad;
 }
 
+tm hoy(const Fecha& fecha){
+    tm tiempo;
+    tiempo.tm_sec = 0; tiempo.tm_min = 0; tiempo.tm_hour = 0; 
+    tiempo.tm_mday = fecha.dia();
+    tiempo.tm_mon = fecha.mes()-1; 
+    tiempo.tm_year = fecha.anno()-1900;
+    tiempo.tm_wday = -1;
+    tiempo.tm_yday = -1;
+    tiempo.tm_isdst = -1;
+    return tiempo;
+}
+
+
+const char* Fecha::cadena() const {
+    static char* fecha = new char[250];
+    char* diacad = new char[3];
+    char* annocad = new char[5];
+    
+    strcpy(fecha, "");
+    
+    strcat(fecha, this->diaSeman() );
+    strcat(fecha, " ");
+    
+    sprintf(diacad, "%02d", this->dia());
+    strcat(fecha, diacad);
+    
+    strcat(fecha, " de ");
+    strcat(fecha, Fecha::meses[this->mes() - 1]);
+    strcat(fecha, " de ");
+    
+    sprintf(annocad, "%04d", this->anno());
+    strcat(fecha, annocad);
+    
+    return fecha;
+}
+
+
+const char* Fecha::diaSeman() const noexcept{
+    tm tiempo_descompuesto = hoy(*this);
+    time_t tiempo_calendario = mktime(&tiempo_descompuesto);
+    tm* tiempo_nuevo = localtime(&tiempo_calendario);
+    switch(tiempo_nuevo->tm_wday){
+        case 0: return "Lunes ";
+        case 1: return "Martes ";
+        case 2: return "Miercoles ";
+        case 3: return "Jueves ";
+        case 4: return "Viernes ";
+        case 5: return "Sabado ";
+        case 6: return "Domingo ";
+        default: return "Dia erroneo";
+    }
+}
 
 Fecha Fecha::operator++(){ 
     *this=*this-1;
@@ -98,6 +151,25 @@ Fecha Fecha::operator--(int fecha){
     --(*this);
     return *this;
 }
+
+std::istream& operator>> (std::istream& imp, Fecha& fech){
+  char cadena[11]="";
+  imp.getline(cadena,11);
+  try{
+    fech = Fecha(cadena);
+  }catch(Fecha::Invalida& e){
+    imp.setstate(std::ios::failbit);
+    throw;
+  }
+  return imp;
+}
+
+std::ostream& operator<< (std::ostream& out, const Fecha& fech){
+    out << fech.cadena();
+    return out;
+}
+
+#endif
 
 
 
