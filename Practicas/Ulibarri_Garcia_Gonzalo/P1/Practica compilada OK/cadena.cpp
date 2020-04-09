@@ -88,73 +88,59 @@ Cadena& Cadena::operator=(const Cadena &c)
 //sobrecarga del operador = para cadena-cadenaBajoNivel
 Cadena& Cadena::operator=(const char *c)
 { 
- /* size_t i=0;
-    size_t tama;
-    while(c[i]!='\0')
-    {
-      tama++;;
-      i++;
-    }
-      tam_=tama;
-      delete[] cadena_;
-      cadena_ = new char[tam_+1];
-    i=0;
-      while(c[i]!='\0')
-      {
-        cadena_[i]=c[i];
-        i++;
-      }
-      cadena_[tama+1]='\0';
-  */
+ 
   tam_=strlen(c);
   cadena_ =new char[tam_+1];
   strcpy(cadena_,c);
   cadena_[tam_+1]='\0';
 
-
-
   return *this;
 }
 
 ///____________________________________________________________________________
-//sobrecarga del operador =+ para cadena-cadena
-void Cadena::operator+=(const Cadena &c)
+//sobrecarga del operador =+ para cadena-cadena y char
+Cadena& Cadena::operator+=(const Cadena &c)
 {
-
   size_t nuevotam = tam_+c.tam_;
-  tam_=nuevotam;
-  cadena_ = new char[nuevotam+1];
   
-  size_t j=0;
-  for(size_t i=tam_+1;i<nuevotam;i++)
-  {
-    cadena_[i]=c.cadena_[j];
-    j++;
-  }
+  cadena_ = new char[nuevotam+1];
+  *this=substr(0,tam_);
+  strcat(cadena_,c.c_str());
 
-  cadena_[nuevotam+1]='\0';
-
+  tam_=nuevotam;
+  cadena_[tam_+1]='\0';
+  return *this;
 }
+
+
+Cadena& Cadena::operator+=(const char *c)
+
+{ size_t len =strlen(c);
+  cadena_=new char[tam_+len+1];
+  *this=substr(0,tam_);//copia todo menos el '\0'
+  
+  tam_+=len; //coloca su tamaño adecuadamente
+  strcat(cadena_,c); //coloca la siguiente cadena concatenada a cadena_
+  cadena_[tam_+1]='\0'; //pone el fin de linea
+  return *this;
+}
+
+
+
 
 ///____________________________________________________________________________
 //sobrecarga del operador + para cadena=cadena-cadena
-Cadena operator+(const Cadena &c1,const Cadena &c2)
+Cadena Cadena::operator+(const Cadena &c)
 {
-size_t tama=c1.length()+c2.length();
-Cadena cad(tama,' ');
-
-for(size_t i=0,j=0 ; i<tama ; i++)
-{
-  if(i<c1.length())
-    cad[i]=c1[i];
-  if(i>=c1.length())
-  {
-    cad[i]=c2[j];
-    j++;
-  }
+  Cadena cad(*this);
+  cad+=c;
+  return cad;
 }
-  cad[tama+1]='\0';
 
+Cadena Cadena::operator+(const Cadena &c)const
+{
+  Cadena cad(*this);
+  cad+=c;
   return cad;
 }
 
@@ -316,5 +302,8 @@ std::istream& operator>>(std::istream& is, Cadena &cadena)
 
     return is;
 }
+
+
+
 
 

@@ -17,10 +17,12 @@ class Cadena{
     const char* c_str() const ;
     inline size_t length() const{return tam_;}
 
-    Cadena& operator=(const char*);
+    Cadena& operator=(const char* c);
     Cadena& operator=(const Cadena &c);
-    void operator+=(const Cadena &c);
-
+    Cadena& operator+=(const Cadena &c);
+    Cadena& operator+=(const char *c);
+    Cadena operator+(const Cadena &c)const;
+    Cadena operator+(const Cadena &c);
     char& operator[](const size_t c);
     char operator[](const size_t c) const ;
     char& at(size_t c);
@@ -55,36 +57,6 @@ class Cadena{
     reverse_iterator rend() {return std::reverse_iterator<iterator>(begin());}
     const_reverse_iterator crend()const {return std::reverse_iterator<const_iterator>(cbegin());}
 
-
-        /*typedef char* iterator;
-        typedef const char* const_iterator;
-        typedef std::reverse_iterator<iterator> reverse_iterator;
-        typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
-        iterator begin() { return cadena_; }
-        iterator end() { return (cadena_ + tam_); }
-        
-        iterator begin() const { return cadena_; }
-        iterator end() const { return (cadena_ + tam_); }
-        
-        const_iterator cbegin() { return cadena_; }
-        const_iterator cend() { return (cadena_ + tam_); }
-        
-        const_iterator cbegin() const { return cadena_; }
-        const_iterator cend() const { return (cadena_ + tam_); }
-        
-        reverse_iterator rbegin() { return std::reverse_iterator<iterator> (cadena_ + tam_); }
-        reverse_iterator rend() { return std::reverse_iterator<iterator> (cadena_); };
-        
-        reverse_iterator rbegin() const { return std::reverse_iterator<iterator> (cadena_ + tam_); }
-        
-        reverse_iterator rend() const { return std::reverse_iterator<iterator> (cadena_); };
-        
-        const_reverse_iterator crbegin() { return std::reverse_iterator<const_iterator> (cadena_ + tam_); }
-        const_reverse_iterator crend() { return std::reverse_iterator<const_iterator> (cadena_); }
-        
-        const_reverse_iterator crbegin() const { return std::reverse_iterator<const_iterator> (cadena_ + tam_); }
-        const_reverse_iterator crend() const { return std::reverse_iterator<const_iterator> (cadena_); }
-*/
     Cadena(Cadena&& cad);
   	Cadena& operator = ( Cadena&&);
 
@@ -95,7 +67,6 @@ class Cadena{
 
 };
 
-Cadena operator+(const Cadena &c1,const Cadena &c2);
 bool operator==(const Cadena &c1,const Cadena &c2);
 bool operator!=(const Cadena &c1,const Cadena &c2);
 bool operator<(const Cadena &c1,const Cadena &c2);

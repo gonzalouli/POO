@@ -1,5 +1,6 @@
 #include <iostream>
 #include <ctime>
+#include <time.h>
 #include <cassert>
 #include <stdlib.h>
 #include "fecha.hpp"
@@ -89,136 +90,76 @@ const char * Fecha::fechaacadena() const {
 }
 
 
-Fecha Fecha::operator+(const int dias){
+Fecha Fecha::operator+(int dias) const{
 
     Fecha f(*this);
+    f+=dias;
+    return f;
 
-    int queda=dias;
-    while(queda!=0){
-        switch(maxdiameses[f.mes()-1]){
-            case 30:
-                if(f.dia()+queda>maxdiameses[f.mes()-1]){
-                    queda=queda-(maxdiameses[f.mes()-1]-f.dia());
-                    f.mes_++;
-                    f.dia_=1;
-                }else
-                {
-                    f.dia_=f.dia()+queda;
-                    queda=0;
-                }
-                break;
-            case 31:
-                if(f.mes()==12 && f.dia()+queda>31)
-                    f.anno_++;
-                else{
-                    if(f.dia()+queda>maxdiameses[f.mes()-1]){
-                       
-                        queda=queda-(maxdiameses[f.mes()-1]-f.dia());
-                         f.mes_++;
-                         f.dia_=1;
-                    }else{ 
-                        f.dia_=f.dia()+queda;
-                        queda=0;
-                    }
-
-                }
-                break;
-            default:
-                if(bisiesto(f.mes()) && f.dia()+queda>29){
-                    
-                    queda=queda-(29-f.dia());
-                   
-                }else{
-                    if (!bisiesto(f.mes()) && f.dia()+queda>28){
-                    queda=queda-(28-f.dia());
-                   
-
-                    }
-                    f.mes_++;
-                    f.dia_=1;
-                    f.dia_=f.dia()+queda;
-                    queda=0;
-                
-                
-                }
-        }
-    }
-    return f;   
 }
 
-Fecha Fecha::operator-(const int dias){
+
+Fecha &Fecha::operator+=(int dias){
+
+    struct tm fecha = {};
+    fecha.tm_mday = dia_;
+    fecha.tm_mon = mes_ - 1;
+    fecha.tm_year = anno_ - 1900;
+    
+    time_t aux = mktime(&fecha) + dias;
+    tm* tiempoDescompuesto = localtime(&aux);
+    
+    int dia = tiempoDescompuesto->tm_mday;
+    int mes = tiempoDescompuesto->tm_mon + 1;
+    int anno = tiempoDescompuesto->tm_year + 1900;
+    
+    *this = Fecha(dia, mes, anno);
+    
+    return *this;  
+}
+
+
+Fecha Fecha::operator-( int dias)const {
     Fecha f(*this);
-    int queda=dias;
-    while(queda!=0){
-        switch(maxdiameses[f.mes()-1]){
-            
-            case 31:
-                if(f.dia()-queda<0){
-                    if(f.mes()==1)
-                        f.mes_=12;
-                    else{
-                        f.mes_--;
-                    }
-                    queda=queda-f.dia();
-                    f.dia_=maxdiameses[f.mes()-1];
-                }else{
-                    if(bisiesto(f.anno()) && f.mes()==2)
-                        f.dia_=29-queda;
-                    else
-                    f.dia_=maxdiameses[f.mes()-1]-queda;
-                }
-            break; 
-
-            default: 
-            if(f.dia_-queda<0){
-                queda=queda-f.dia();
-                f.mes_--;
-                f.dia_=maxdiameses[f.mes()-1];
-            }else
-                f.dia_=maxdiameses[f.mes()-1]-queda;
-
-        }
-
-    }
+    f+=-dias;
     return f;
 }
 
-Fecha& Fecha::operator++(){
-    if(mes_==12 && dia_==31){
-        anno_++;
-        dia_=mes_=1;
-    }else{
-        if(dia_==maxdiameses[mes_-1] || (bisiesto(anno_) && mes_==3 && dia_==29)){
-            mes_++;
-            dia_=1;
-        }
-        else
-        {
-            dia_++;
-        }
-        
-    }
-  return *this;
+
+
+Fecha& Fecha::operator-=(int dias){
+
+    *this+=-dias;
+    return *this;
 }
+
+
+Fecha& Fecha::operator++(){
+    *this+=1;
+    return *this;
+}
+
 
 Fecha& Fecha::operator--(){
-    if(mes_==1 && dia_==1 ){
-        anno_--;
-        mes_=12;
-        dia_=maxdiameses[mes_-1];
-        
-    }else{
-        if(dia_==0)
-            mes_--;
-        if(bisiesto(anno_) && mes_==3)
-            dia_=29;
-        else{
-            dia_=maxdiameses[mes_-1];
-            } 
-    }
-  return *this;
+    *this-=1;
+    return *this;
 
 }
+
+
+Fecha Fecha::operator++(int){
+    Fecha aux(*this);
+    ++aux;
+    return aux;
+}
+
+
+Fecha Fecha::operator--(int){
+    Fecha aux(*this);
+    --aux;
+    return aux;
+}
+
 
 bool operator==(const Fecha &f1,const Fecha &f2){
     if(f1.dia()==f2.dia() && f1.mes()==f2.mes() && f1.anno()==f2.anno())
@@ -227,8 +168,10 @@ bool operator==(const Fecha &f1,const Fecha &f2){
     {
         return false;
     }
-
 }
+
+
+
 
 bool operator<(const Fecha &f1,const Fecha &f2){
 
@@ -247,8 +190,9 @@ bool operator<(const Fecha &f1,const Fecha &f2){
         }
     }
     return false;
-
 }
+
+
 
 bool operator>(const Fecha &f1,const Fecha &f2){
 
@@ -267,50 +211,21 @@ bool operator>(const Fecha &f1,const Fecha &f2){
         }
     }
     return false;
-
 }
+
+
 
 bool operator<=(const Fecha &f1,const Fecha &f2){
 
-    if(f1==f2)
-        return true;
-    if(f1.anno()<f2.anno())
-    return true;
-    else{
-        if(f1.anno()==f2.anno()){
-            if(f1.mes()<f2.mes())
-                return true;
-            else{
-                if(f1.mes()==f2.mes()){
-                    if(f1.dia()<f2.dia())
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
+    return (f1<f2 || f1==f2);
 
 }
 
+
 bool operator>=(const Fecha &f1,const Fecha &f2){
 
-    if(f1==f2)
-        return true;
-    if(f1.anno()>f2.anno())
-        return true;
-    else{
-        if(f1.anno()==f2.anno()){
-            if(f1.mes()>f2.mes())
-                return true;
-            else{
-                if(f1.mes()==f2.mes()){
-                    if(f1.dia()>f2.dia())
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
+    return (f1>f2 || f1==f2);
+
 }
 
 
@@ -329,9 +244,7 @@ int zeller(const Fecha &f){
 
    h= ( f.dia() +   y   +   y/4 -   y/100   +   y/400   +   (31*m)/12   )   %7;
     return h;
-
 }
-
 
 
 bool Fecha::treinta(const int mes){
@@ -370,34 +283,6 @@ istream& operator>>(istream& is, Fecha &fecha)
 
     return is;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
