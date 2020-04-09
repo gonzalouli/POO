@@ -1,12 +1,12 @@
-#	$Id: Make_check.mk 379 2017-03-22 18:33:06Z gerardo $
+#	$Id: Make_check.mk 411 2018-04-04 16:04:49Z u44965478 $
 # Makefile para las comprobaciones estáticas de código fuente
-# de cadena.cpp y fecha.cpp, clases Cadena y Fecha, de la P1
-# ©2017 Los profesores de POO de la ESI de la UCA
+# de cadena.cpp y fecha.cpp, clases Cadena y Fecha, de la P0
+# ©2017-19 Los profesores de POO de la ESI de la UCA
 
 # Directorio donde está el código compartido del DSL
 DIR=../dsl-comprobaciones/
 
-# Obligatorio Clang, versión 3.9 al menos
+# Obligatorios Clang, versión 3.9 al menos, y estándar c++11 o superior
 CXX         := clang++
 CPPFLAGS    := -I${DIR} $(shell llvm-config --cppflags)
 CXXFLAGS    := -std=c++11
