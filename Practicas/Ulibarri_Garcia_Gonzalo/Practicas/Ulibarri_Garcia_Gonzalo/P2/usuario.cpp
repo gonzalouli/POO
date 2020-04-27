@@ -5,7 +5,7 @@ using namespace std;
 
 Usuario::Usuarios Usuario::listado;
 
-Usuario::Usuario(const Cadena& id,const Cadena& nombre,const Cadena& apellidos, const Cadena& direccion, const Clave clave)
+Usuario::Usuario(const Cadena& id,const Cadena& nombre,const Cadena& apellidos, const Cadena& direccion, const Clave& clave)
 {
     if(!listado.insert(id).second)
         throw Id_duplicado(id);
