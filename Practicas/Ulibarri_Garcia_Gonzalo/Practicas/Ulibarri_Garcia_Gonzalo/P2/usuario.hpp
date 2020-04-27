@@ -62,7 +62,7 @@ class Usuario
         typedef std::unordered_set<Cadena> Usuarios;
         static Usuarios listado;
 
-        Usuario( const Cadena&, const Cadena&, const Cadena&,  const Cadena&,  const Clave);
+        Usuario( const Cadena&, const Cadena&, const Cadena&,  const Cadena&,  const Clave&);
 
 
         Usuario(const Usuario& us)=delete;
