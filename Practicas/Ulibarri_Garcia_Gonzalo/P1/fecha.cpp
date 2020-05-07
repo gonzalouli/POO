@@ -1,209 +1,304 @@
-
-
-
 #include <iostream>
-#include <ctime>    
-#include <chrono>
+#include <ctime>
+#include <time.h>
+#include <cassert>
+#include <stdlib.h>
 #include "fecha.hpp"
-
-#ifndef FECHA_CPP_
-#define FECHA_CPP_
+#include <iomanip>
 
 using namespace std;
-///time_point<system_clock> hoy = system_clock::now();
-///std::time_t tc = system_clock::to_time_t(hoy);
+
+
 std::time_t tiempo_calendario = std::time(nullptr);
 std::tm* tiempo_descompuesto = std::localtime(&tiempo_calendario);
-//int dia  = tiempo_descompuesto->tm_mday;
-//int mes  = tiempo_descompuesto->tm_mon + 1;  
-//int anno = tiempo_descompuesto->tm_year + 1900;
 
-Fecha::Fecha(int dia, int mes, int anno):dia_(dia),mes_(mes),anno_(anno){
-    time_t calendario = time(0);
-    tm* tiempoDescompuesto = localtime(&calendario);
-    if(dia_ == 0){
-        //dia mes y año del sistema
-    	dia_  = tiempo_descompuesto->tm_mday;
-    	mes_  = tiempo_descompuesto->tm_mon + 1;
-    	anno_ = tiempo_descompuesto->tm_year + 1900;
-    }else{
-        if( mes_ == 0){
-            //mes y año del sistema
-             mes_  = tiempo_descompuesto->tm_mon + 1;
-             anno_ = tiempo_descompuesto->tm_year + 1900;
-        }else{
-            if(anno_ ==0)
-               anno_ = tiempo_descompuesto->tm_year + 1900;
-        }
-    }
+Fecha::Fecha(int a,int m,int n):dia_(a),mes_(m),anno_(n){
+  if(a==0)
+    dia_=tiempo_descompuesto->tm_mday;
+  if(m==0)
+    mes_=tiempo_descompuesto->tm_mon + 1;
+  if(n==0)
+    anno_= tiempo_descompuesto->tm_year + 1900;
+   if (!validarfech()){
+    throw Invalida("Fecha no valida");
+  }
+    if(m==3 && !bisiesto(n) && a==29){
+    a=28;
+    printf("El año introducido no bisiesto");
+  }
 
-    if(dia_>31 || mes_>12){
-        throw Invalida("Fecha imposible");
-    }
+}
 
-    if(mes_==2 && dia_>29 || mes_==2 && dia_>28 && !(anno_ % 4 == 0 && (anno_ % 400 == 0 || anno_ % 100 != 0))){
-        throw Invalida("Febrero no puede tener esos dias");
-    }
 
-    if(anno_ < annomin || anno_ > annomax){
-        throw Invalida("Superas los anios permitidos");
+Fecha::Fecha( const Fecha& fech){
+    if(this != &fech){
+        dia_=fech.dia();
+        mes_=fech.mes();
+        anno_=fech.anno();
     }
 }
 
+Fecha::Fecha(const char* c){
+    int validaconversion;
+    validaconversion=sscanf(c,"%d/%d/%d",&dia_, &mes_, &anno_);
+    if(validaconversion==3)
+      *this=Fecha(dia_,mes_,anno_);
+    
+    if(!validarfech()) throw Invalida("Fecha no valida");
+    else
+      throw Invalida("Conversion imposible");
 
-Fecha::Fecha(const char *fecha){
-int formato; 
-int dia,mes,anno;
-formato = sscanf( fecha, "%d/%d/%d",&dia,&mes,&anno );
-
-if(formato != 3){ 
-    throw Invalida("el formato no es de 3");
-}else{
-    if(anno_ < annomin || anno_ > annomax)
-        throw Invalida("Superas los anios permitidos");
-}
 }
 
-Fecha::operator const char*() const{
-
-  setlocale(LC_ALL, "es_ES");
-  static char fechaCad[36];
-
-  tm t = {0, 0, 0, dia_, mes_ - 1, anno_ - 1900, 0, 0, 0};
-  mktime(&t);
-  int diasem = t.tm_wday;
-  sprintf(fechaCad, "%s %d de %s del %d", Fecha::diasSemana[diasem], dia_, meses[mes_], anno_);
-
-  return fechaCad;
+Fecha& Fecha::operator=(const Fecha &fech){
+    dia_=fech.dia();
+    mes_=fech.mes();
+    anno_=fech.anno();
+    return *this;
 }
 
-tm hoy(const Fecha& fecha){
-    tm tiempo;
-    tiempo.tm_sec = 0; tiempo.tm_min = 0; tiempo.tm_hour = 0; 
-    tiempo.tm_mday = fecha.dia();
-    tiempo.tm_mon = fecha.mes()-1; 
-    tiempo.tm_year = fecha.anno()-1900;
-    tiempo.tm_wday = -1;
-    tiempo.tm_yday = -1;
-    tiempo.tm_isdst = -1;
-    return tiempo;
+const char* Fecha::Invalida::por_que() const
+{
+	return error_;
 }
+
+
+bool Fecha::validarfech(){
+
+    bool valida  = true;
+    tm t = {};
+    t.tm_mday= dia_;
+    t.tm_mon=mes_;
+    t.tm_year=anno_;
+    mktime(&t);
+    if(t.tm_mday!=dia_){throw Invalida("error en el dia");valida=false;}
+    if(t.tm_mon!=mes_) {throw Invalida("error en el mes");valida=false;}
+    if(t.tm_year!=anno_) {throw Invalida("error en el anio");valida=false;}
+    if(( !bisiesto(mes_) && dia_==29) ||  (treinta(mes_) && dia_==31)){ 
+      throw Invalida("No es un anio bisiesto, no puede tener 29 dias");
+      valida=false;
+    }
+
+    if(AnnoMinimo>anno_ || AnnoMaximo<anno_){
+      throw Invalida("Fuera de rango");
+      valida=false;
+    }
+
+return valida;
+
+}
+
 
 
 const char* Fecha::cadena() const {
-    static char* fecha = new char[250];
-    char* diacad = new char[3];
-    char* annocad = new char[5];
-    
-    strcpy(fecha, "");
-    
-    strcat(fecha, this->diaSeman() );
-    strcat(fecha, " ");
-    
-    sprintf(diacad, "%02d", this->dia());
-    strcat(fecha, diacad);
-    
-    strcat(fecha, " de ");
-    strcat(fecha, Fecha::meses[this->mes() - 1]);
-    strcat(fecha, " de ");
-    
-    sprintf(annocad, "%04d", this->anno());
-    strcat(fecha, annocad);
-    
-    return fecha;
+    tm f{};
+    f.tm_mday = dia_;
+    f.tm_mon = mes_ -1;
+    f.tm_year = anno_ -1900;
+    f.tm_isdst = -1;
+    mktime(&f);
+    static char cad[100];
+    sprintf(cad,"%s %d de %s de %d",diasSemana[f.tm_wday],f.tm_mday,mesesTotales[f.tm_mon],anno());
+    return cad;
 }
 
 
-const char* Fecha::diaSeman() const noexcept{
-    tm tiempo_descompuesto = hoy(*this);
-    time_t tiempo_calendario = mktime(&tiempo_descompuesto);
-    tm* tiempo_nuevo = localtime(&tiempo_calendario);
-    switch(tiempo_nuevo->tm_wday){
-        case 0: return "Lunes ";
-        case 1: return "Martes ";
-        case 2: return "Miercoles ";
-        case 3: return "Jueves ";
-        case 4: return "Viernes ";
-        case 5: return "Sabado ";
-        case 6: return "Domingo ";
-        default: return "Dia erroneo";
+Fecha Fecha::operator+(int dias) const{
+
+    Fecha f(*this);
+    f+=dias;
+    return f;
+
+}
+
+
+Fecha &Fecha::operator+=(int dias){
+
+    struct tm fecha = {};
+    fecha.tm_mday = dia_;
+    fecha.tm_mon = mes_ - 1;
+    fecha.tm_year = anno_ - 1900;
+    
+    time_t aux = mktime(&fecha) + dias;
+    tm* tiempoDescompuesto = localtime(&aux);
+    
+    int dia = tiempoDescompuesto->tm_mday;
+    int mes = tiempoDescompuesto->tm_mon + 1;
+    int anno = tiempoDescompuesto->tm_year + 1900;
+    
+    *this = Fecha(dia, mes, anno);
+    
+    return *this;  
+}
+
+
+Fecha Fecha::operator-( int dias)const {
+    Fecha f(*this);
+    f+=-dias;
+    return f;
+}
+
+
+
+Fecha& Fecha::operator-=(int dias){
+
+    *this+=-dias;
+    return *this;
+}
+
+
+Fecha& Fecha::operator++(){
+    *this+=1;
+    return *this;
+}
+
+
+Fecha& Fecha::operator--(){
+    *this-=1;
+    return *this;
+
+}
+
+
+Fecha Fecha::operator++(int){
+    Fecha aux(*this);
+    ++aux;
+    return aux;
+}
+
+
+Fecha Fecha::operator--(int){
+    Fecha aux(*this);
+    --aux;
+    return aux;
+}
+
+
+bool operator==(const Fecha &f1,const Fecha &f2){
+    if(f1.dia()==f2.dia() && f1.mes()==f2.mes() && f1.anno()==f2.anno())
+        return true;
+    else
+    {
+        return false;
     }
 }
 
-Fecha Fecha::operator++(){ 
-    *this=*this-1;
-    return *this;
+
+
+
+bool operator<(const Fecha &f1,const Fecha &f2){
+
+    if(f1.anno()<f2.anno())
+    return true;
+    else{
+        if(f1.anno()==f2.anno()){
+            if(f1.mes()<f2.mes())
+                return true;
+            else{
+                if(f1.mes()==f2.mes()){
+                    if(f1.dia()<f2.dia())
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
-Fecha Fecha::operator--(){
-    *this=*this-1;
-    return *this;
+
+
+
+bool operator>(const Fecha &f1,const Fecha &f2){
+
+    if(f1.anno()>f2.anno())
+    return true;
+    else{
+        if(f1.anno()==f2.anno()){
+            if(f1.mes()>f2.mes())
+                return true;
+            else{
+                if(f1.mes()==f2.mes()){
+                    if(f1.dia()>f2.dia())
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
-Fecha Fecha::operator++(int fecha){
-    Fecha self(*this);
-    ++(*this);
-    return *this;
+
+
+bool operator<=(const Fecha &f1,const Fecha &f2){
+
+    return (f1<f2 || f1==f2);
+
 }
 
-Fecha Fecha::operator--(int fecha){
-    Fecha self(*this);
-    --(*this);
-    return *this;
+
+bool operator>=(const Fecha &f1,const Fecha &f2){
+
+    return (f1>f2 || f1==f2);
+
 }
 
-std::istream& operator>> (std::istream& imp, Fecha& fech){
-  char cadena[11]="";
-  imp.getline(cadena,11);
-  try{
-    fech = Fecha(cadena);
-  }catch(Fecha::Invalida& e){
-    imp.setstate(std::ios::failbit);
-    throw;
-  }
-  return imp;
+
+bool operator!=(const Fecha &f1,const Fecha &f2){
+    return !(f1==f2);
 }
-
-std::ostream& operator<< (std::ostream& out, const Fecha& fech){
-    out << fech.cadena();
-    return out;
-}
-
-#endif
-
-
-
-int main(){
-  cout << "Hola que tal";
-  cout << "Adios";
-
-  return 0;
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*
-Fecha::operator const char*() const {
-    char* s = new char[40];
-    setlocale(LC_TIME, "");
-    tm f = {};
-    f.tm_mday = dia_;
-    f.tm_mon = mes_ - 1;
-    f.tm_year = anno_ - 1900;
-    mktime(&f);
-    strftime(s, 40, "%A %d de %B de %Y", &f);
-    return s;
+int zeller(const Fecha &f){
+    
+    int h,a,m,y;
+
+    a=(14-f.mes())/12;
+    y=f.anno()-a;
+    m=f.mes()+12*a-2;
+
+   h= ( f.dia() +   y   +   y/4 -   y/100   +   y/400   +   (31*m)/12   )   %7;
+    return h;
 }
 */
+
+bool Fecha::treinta(const int mes){
+  if(mes==4 || mes==6 || mes==9 || mes==11)
+    return true;
+  else
+    return false;
+}
+
+
+
+ostream& operator<<(ostream& os,const Fecha &fecha)
+{
+    os<<fecha.cadena();
+    return os;
+}
+
+istream& operator>>(istream& is, Fecha &fecha)
+{   char *c= new char[11];
+
+    is>>setw(11)>>c; //tomamos el tamaño de is a 11
+    int d,m,a; 
+    sscanf(c,"%2d/%2d/%4d",&d,&m,&a); //tomamos el dia mes y año de la fecha en cuestion
+
+    try{
+        
+        Fecha fecha(d,m,a);
+        std::cout<<"La fecha es:"<<fecha<<std::endl;
+
+    }catch(Fecha::Invalida I){
+        if(!fecha.validarfech()){
+            std::cerr<<"LA FECHA NO ES VALIDA"<<std::endl;
+            std::cerr<<I.por_que()<<std::endl;
+        }
+    }
+
+    return is;
+}
+
+
+
+
+
